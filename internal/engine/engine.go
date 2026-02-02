@@ -28,7 +28,7 @@ func (eng *MonitorEngine) Start(ctx context.Context) error {
 	eventChan := make(chan events.Message)
 	eng.Containers = make(map[string]*Container)
 
-	// TODO: Add subscription to docker events.
+	// TODO: Add subscription to docker events. <--- STOPPED HERE.
 	// Subscribe to the client event stream and handle
 	// container start and stop events.
 	go eng.handleEvents(ctx, eventChan)

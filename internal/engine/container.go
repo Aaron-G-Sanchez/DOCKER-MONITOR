@@ -56,7 +56,6 @@ func (c *Container) IsRunning() bool {
 
 }
 
-// TODO: COPY AND REFACTOR CODE FROM getContainerStats. <---- STOPPED HERE.
 func (c *Container) CollectStats(ctx context.Context, client *docker.Client) {
 	stats, err := client.ListContainerStats(ctx, c.id)
 	if err != nil {

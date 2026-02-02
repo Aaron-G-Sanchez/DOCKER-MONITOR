@@ -22,20 +22,14 @@ func TestEngine_StartSuccess(t *testing.T) {
 		ID:    "a1b2c3",
 		Names: []string{"mock-container"},
 		State: container.StateExited,
+		Image: "mock-image",
 	}
 
 	mockContainer := NewContainer(*mockSum)
 
 	mockAPIClient := &testutils.MockDockerClient{
 		MockContainers: client.ContainerListResult{
-			Items: []container.Summary{
-				{
-					ID:    "a1b2c3",
-					Names: []string{"mock-container"},
-					State: container.StateExited,
-					Image: "mock-image",
-				},
-			},
+			Items: []container.Summary{*mockSum},
 		},
 		MockContainerStats: client.ContainerStatsResult{
 			Body: io.NopCloser(strings.NewReader("")),
