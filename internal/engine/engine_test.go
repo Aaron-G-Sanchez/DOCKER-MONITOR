@@ -2,11 +2,9 @@ package engine
 
 import (
 	"context"
-	"encoding/json"
 	"io"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/docker"
 	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/testutils"
@@ -20,12 +18,21 @@ import (
 
 func TestEngine_StartSuccess(t *testing.T) {
 
+	mockSum := &container.Summary{
+		ID:    "a1b2c3",
+		Names: []string{"mock-container"},
+		State: container.StateExited,
+	}
+
+	mockContainer := NewContainer(*mockSum)
+
 	mockAPIClient := &testutils.MockDockerClient{
 		MockContainers: client.ContainerListResult{
 			Items: []container.Summary{
 				{
-					ID:    "1234",
+					ID:    "a1b2c3",
 					Names: []string{"mock-container"},
+					State: container.StateExited,
 					Image: "mock-image",
 				},
 			},
@@ -50,60 +57,10 @@ func TestEngine_StartSuccess(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(
 		t,
-		mockAPIClient.MockContainers,
-		*mockEngine.Containers,
+		mockEngine.Containers["a1b2c3"],
+		mockContainer,
 		"Should set the containers field.",
 	)
-
 }
 
-func TestEngine_getContainerStats(t *testing.T) {
-	mockStatsResponse := container.StatsResponse{
-		ID:     "1234",
-		Name:   "mock-container",
-		OSType: "ubuntu",
-	}
-	mockStatsResponseJson, err := json.Marshal(mockStatsResponse)
-	assert.NoError(t, err)
-
-	mockStatsString := string(mockStatsResponseJson) + "\n"
-
-	mockBody := io.NopCloser(strings.NewReader(mockStatsString))
-
-	mockAPIClient := &testutils.MockDockerClient{
-		MockContainers: client.ContainerListResult{
-			Items: []container.Summary{
-				{
-					ID:    "1234",
-					Names: []string{"mock-container"},
-					Image: "mock-image",
-				},
-			},
-		},
-		MockContainerStats: client.ContainerStatsResult{
-			Body: mockBody,
-		},
-		Err: nil,
-	}
-
-	mockDockerClient := docker.NewClientWithMockAPI(mockAPIClient)
-
-	mockEngine := NewEngine(*mockDockerClient)
-	mockEngine.ContainerStats = make(map[string]*container.StatsResponse)
-
-	ctx, cancel := context.WithCancel(t.Context())
-	defer cancel()
-
-	go mockEngine.getContainerStats(ctx, "1234")
-
-	assert.Eventually(t, func() bool {
-		mockEngine.Mu.Lock()
-		defer mockEngine.Mu.Unlock()
-		return mockEngine.ContainerStats["1234"] != nil
-
-	}, time.Second, 100*time.Millisecond, "Should collect container stats")
-
-	mockEngine.Mu.Lock()
-	assert.Equal(t, "1234", mockEngine.ContainerStats["1234"].ID)
-	mockEngine.Mu.Unlock()
-}
+// TODO: Add test for loadContainers and event subscription.

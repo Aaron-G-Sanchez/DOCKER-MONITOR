@@ -85,6 +85,7 @@ func (eng *MonitorEngine) loadContainers(ctx context.Context) error {
 }
 
 func (eng *MonitorEngine) handleEvents(ctx context.Context, eventChan <-chan events.Message) {
+	// Create cancellable context and start stat collection.
 	collectStats := func(ctx context.Context, container *Container) {
 		container.mu.Lock()
 		childCtx, cancel := context.WithCancel(ctx)
@@ -95,6 +96,7 @@ func (eng *MonitorEngine) handleEvents(ctx context.Context, eventChan <-chan eve
 	}
 
 	// TODO: Add event handling for die events.
+	// TODO: Create new container and start stat collection.
 	for e := range eventChan {
 
 		if e.Actor.ID == "" {
