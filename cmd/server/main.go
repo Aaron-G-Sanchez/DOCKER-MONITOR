@@ -41,38 +41,10 @@ func main() {
 		// Time
 		cur := time.Now()
 		hr, min, sec := cur.Clock()
-		y, m, d := cur.Date()
-		var monthNum int
-		switch m {
-		case time.January:
-			monthNum = 1
-		case time.February:
-			monthNum = 2
-		case time.March:
-			monthNum = 3
-		case time.April:
-			monthNum = 4
-		case time.May:
-			monthNum = 5
-		case time.June:
-			monthNum = 6
-		case time.July:
-			monthNum = 7
-		case time.August:
-			monthNum = 8
-		case time.September:
-			monthNum = 9
-		case time.October:
-			monthNum = 10
-		case time.November:
-			monthNum = 11
-		case time.December:
-			monthNum = 12
-		default:
-			panic("Invalid month")
-		}
+		y, _, d := cur.Date()
+		m := int(cur.Month())
 
-		dateTime := fmt.Sprintf("%v-%v-%v %v:%v:%v", y, monthNum, d, hr, min, sec)
+		dateTime := fmt.Sprintf("%v-%v-%v %v:%v:%v", y, m, d, hr, min, sec)
 
 		// MEM%
 		usedMem := s.MemoryStats.Usage - s.MemoryStats.Stats["inactive_file"]
