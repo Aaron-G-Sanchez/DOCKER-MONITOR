@@ -38,7 +38,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		// Time
+		// Get / Format Time
 		cur := time.Now()
 		hr, min, sec := cur.Clock()
 		y, _, d := cur.Date()
@@ -46,25 +46,26 @@ func main() {
 
 		dateTime := fmt.Sprintf("%v-%v-%v %v:%v:%v", y, m, d, hr, min, sec)
 
-		// MEM%
+		// Calc. Memory Stats
 		usedMem := s.MemoryStats.Usage - s.MemoryStats.Stats["inactive_file"]
 		memPercent := (float64(usedMem) / float64(s.MemoryStats.Limit)) * 100
-		sprint := fmt.Sprintf("%.2f", memPercent)
+		memResult := fmt.Sprintf("%.2f", memPercent)
 
 		usedMemInMb := usedMem / 1048576
 
-		// TODO: Need to modify the cpu percent to display in decimal point.
-		// CPU Usage
-		cpuD := s.CPUStats.CPUUsage.TotalUsage
-		systemCpuD := s.CPUStats.SystemUsage - s.PreCPUStats.SystemUsage
+		// Calc. CPU Usage
+		cpuD := float64(s.CPUStats.CPUUsage.TotalUsage) - float64(s.PreCPUStats.CPUUsage.TotalUsage)
+		systemCpuD := float64(s.CPUStats.SystemUsage) - float64(s.PreCPUStats.SystemUsage)
 		numCpu := s.CPUStats.OnlineCPUs
-		cpuPercent := (cpuD / systemCpuD) * uint64(numCpu) * 100
+		cpuPercent := (cpuD / systemCpuD) * float64(numCpu) * 100
 
-		fmt.Printf("Time: %v, Memory Percent : %v%%, Mem Usage: %dmb, cpu usage: %d\n",
+		cpuResult := fmt.Sprintf("%.2f", cpuPercent)
+
+		fmt.Printf("Time: %v, Memory Percent : %v%%, Mem Usage: %dmb, cpu usage: %v\n",
 			dateTime,
-			sprint,
+			memResult,
 			usedMemInMb,
-			cpuPercent)
+			cpuResult)
 	}
 
 }
