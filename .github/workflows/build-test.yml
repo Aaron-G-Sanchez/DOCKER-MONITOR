@@ -1,0 +1,30 @@
+name: Build and test
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: 'stable'
+          cache: false
+
+      - name: Set up Docker
+        uses: docker/setup-docker-action@v4
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Test
+        run: go test -v ./...
