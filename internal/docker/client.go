@@ -2,7 +2,6 @@ package docker
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/moby/moby/client"
 )
@@ -16,8 +15,6 @@ func NewClient() (*DockerClient, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Print("Workflow test.")
 
 	return &DockerClient{
 		client: client,
