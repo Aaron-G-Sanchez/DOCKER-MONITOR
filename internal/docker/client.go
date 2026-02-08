@@ -6,8 +6,13 @@ import (
 	"github.com/moby/moby/client"
 )
 
+type APIClient interface {
+	ContainerList(ctx context.Context, options client.ContainerListOptions) (client.ContainerListResult, error)
+	Close() error
+}
+
 type DockerClient struct {
-	client *client.Client
+	api APIClient
 }
 
 func NewClient() (*DockerClient, error) {
@@ -17,14 +22,18 @@ func NewClient() (*DockerClient, error) {
 	}
 
 	return &DockerClient{
-		client: client,
+		api: client,
 	}, nil
 }
 
-func (dc *DockerClient) ListContainers(ctx context.Context) (*client.ContainerListResult, error) {
-	containers, err := dc.client.ContainerList(ctx, client.ContainerListOptions{All: true})
-	if err != nil {
-		return nil, err
-	}
-	return &containers, nil
+func NewClientWithAPI(api APIClient) *DockerClient {
+	return &DockerClient{api: api}
+}
+
+func (dc *DockerClient) ListContainers(ctx context.Context) (client.ContainerListResult, error) {
+	return dc.api.ContainerList(ctx, client.ContainerListOptions{All: true})
+}
+
+func (dc *DockerClient) Close() error {
+	return dc.api.Close()
 }

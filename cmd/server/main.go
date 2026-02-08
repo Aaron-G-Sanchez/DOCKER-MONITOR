@@ -16,6 +16,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error initializing Docker client: %v\n", err)
 	}
+	defer client.Close()
 
 	// TODO: Add options as a param.
 	containers, err := client.ListContainers(ctx)
