@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TODO: Replace with the mock in the test utils.
 // CLIENT STRUCT FOR MOCKING.
 type MockAPIClient struct {
 	containers     client.ContainerListResult
