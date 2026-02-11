@@ -32,6 +32,7 @@ func NewClientWithMockAPI(api APIClient) *DockerClient {
 	return &DockerClient{api: api}
 }
 
+// TODO: Pass the options as param to ListContainers.
 // List all containers in the docker host.
 func (dc *DockerClient) ListContainers(ctx context.Context) (client.ContainerListResult, error) {
 	return dc.api.ContainerList(ctx, client.ContainerListOptions{All: true})
