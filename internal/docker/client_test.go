@@ -1,37 +1,17 @@
 package docker
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"io"
 	"strings"
 	"testing"
 
+	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/testutils"
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
 	"github.com/stretchr/testify/assert"
 )
-
-// TODO: Replace with the mock in the test utils.
-// CLIENT STRUCT FOR MOCKING.
-type MockAPIClient struct {
-	containers     client.ContainerListResult
-	containerStats client.ContainerStatsResult
-	err            error
-}
-
-func (mock *MockAPIClient) ContainerList(ctx context.Context, _ client.ContainerListOptions) (client.ContainerListResult, error) {
-	return mock.containers, mock.err
-}
-
-func (mock *MockAPIClient) ContainerStats(ctx context.Context, containerID string, _ client.ContainerStatsOptions) (client.ContainerStatsResult, error) {
-	return mock.containerStats, mock.err
-}
-
-func (mock *MockAPIClient) Close() error {
-	return mock.err
-}
 
 func TestNewClient_Success(t *testing.T) {
 
@@ -72,9 +52,9 @@ func TestListContainers(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			mockAPI := &MockAPIClient{
-				containers: tc.containers,
-				err:        tc.err,
+			mockAPI := &testutils.MockAPIClient{
+				MockContainers: tc.containers,
+				Err:            tc.err,
 			}
 
 			mockClient := NewClientWithMockAPI(mockAPI)
@@ -129,9 +109,9 @@ func TestListContainerStats(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			mockApi := &MockAPIClient{
-				containerStats: tc.containerStats,
-				err:            tc.err,
+			mockApi := &testutils.MockAPIClient{
+				MockContainerStats: tc.containerStats,
+				Err:                tc.err,
 			}
 
 			mockClient := NewClientWithMockAPI(mockApi)
