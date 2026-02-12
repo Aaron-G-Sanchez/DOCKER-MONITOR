@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRouter(t *testing.T) {
+func TestServer(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	mockContainers := &client.ContainerListResult{
