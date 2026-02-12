@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 
+	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/api"
 	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/docker"
 	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/engine"
 )
@@ -22,6 +22,7 @@ func run(ctx context.Context) {
 		log.Fatalf("Error starting docker client: %v\n", err)
 	}
 
+	// Create and start the monitor engine.
 	engine := engine.CreateEngine(ctx, *client)
 	defer engine.Client.Close()
 
@@ -29,7 +30,10 @@ func run(ctx context.Context) {
 		log.Fatalf("Error running engine: %v\n", err)
 	}
 
-	fmt.Printf("CONTAINERS: \n")
-	fmt.Printf("%+v\n", *engine.Containers)
+	// Create and run the server.
+	server := api.NewServer(engine)
+	if err := server.Start(":9876"); err != nil {
+		log.Fatalf("Error starting server: %v\n", err)
+	}
 
 }
