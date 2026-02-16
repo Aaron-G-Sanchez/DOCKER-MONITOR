@@ -27,6 +27,7 @@ func NewClient() (*DockerClient, error) {
 	}, nil
 }
 
+// TODO: Move to test utils.
 // FUNCTION FOR MOCKING DOCKER SDK API.
 func NewClientWithMockAPI(api APIClient) *DockerClient {
 	return &DockerClient{api: api}
@@ -40,7 +41,7 @@ func (dc *DockerClient) ListContainers(ctx context.Context) (client.ContainerLis
 
 // Retrieves live resource usage statistics for the specified container.
 func (dc *DockerClient) ListContainerStats(ctx context.Context, containerID string) (client.ContainerStatsResult, error) {
-	return dc.api.ContainerStats(ctx, containerID, client.ContainerStatsOptions{})
+	return dc.api.ContainerStats(ctx, containerID, client.ContainerStatsOptions{Stream: true})
 }
 
 func (dc *DockerClient) Close() error {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 
-	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/api"
 	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/docker"
 	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/engine"
 )
@@ -31,9 +30,9 @@ func run(ctx context.Context) {
 	}
 
 	// Create and run the server.
-	server := api.NewServer(engine)
-	if err := server.Start(":9876"); err != nil {
-		log.Fatalf("Error starting server: %v\n", err)
-	}
+	// server := api.NewServer(engine)
+	// if err := server.Start(":9876"); err != nil {
+	// 	log.Fatalf("Error starting server: %v\n", err)
+	// }
 
 }
