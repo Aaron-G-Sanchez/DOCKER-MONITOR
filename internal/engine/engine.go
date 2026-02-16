@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"sync"
 
 	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/docker"
 	"github.com/moby/moby/api/types/container"
@@ -12,6 +13,7 @@ import (
 )
 
 type MonitorEngine struct {
+	mu             sync.Mutex
 	ctx            context.Context
 	Client         docker.DockerClient
 	Containers     *client.ContainerListResult
@@ -60,14 +62,18 @@ func (eng *MonitorEngine) getContainerStats(id string) {
 	decoder := json.NewDecoder(stats.Body)
 
 	for {
+
 		var statResult *container.StatsResponse
 
 		if err := decoder.Decode(&statResult); err != nil {
-			log.Fatalf("Error Decoding stats: %v\n", err)
+			return
 		}
 
+		eng.mu.Lock()
 		eng.ContainerStats[id] = statResult
+		eng.mu.Unlock()
 
-		fmt.Printf("%+v\n", *eng.ContainerStats[id])
+		fmt.Println(eng.ContainerStats[id])
+
 	}
 }
