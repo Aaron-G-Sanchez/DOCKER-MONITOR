@@ -50,10 +50,10 @@ func setup(containers *client.ContainerListResult, t *testing.T) *Server {
 	}
 
 	mockDockerClient := docker.NewClientWithMockAPI(mockAPIClient)
-	mockEngine := engine.CreateEngine(t.Context(), *mockDockerClient)
+	mockEngine := engine.CreateEngine(*mockDockerClient)
 	defer mockEngine.Client.Close()
 
-	mockEngine.Start()
+	mockEngine.Start(t.Context())
 
 	mockServer := NewServer(mockEngine)
 

@@ -25,9 +25,9 @@ func TestEngine_StartSuccess(t *testing.T) {
 	}
 	mockDockerClient := docker.NewClientWithMockAPI(mockAPIClient)
 
-	mockEngine := CreateEngine(t.Context(), *mockDockerClient)
+	mockEngine := CreateEngine(*mockDockerClient)
 
-	err := mockEngine.Start()
+	err := mockEngine.Start(t.Context())
 
 	assert.NoError(t, err)
 	assert.Equal(
