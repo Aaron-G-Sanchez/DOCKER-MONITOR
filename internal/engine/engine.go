@@ -14,36 +14,33 @@ import (
 
 type MonitorEngine struct {
 	mu             sync.Mutex
-	ctx            context.Context
 	Client         docker.DockerClient
 	Containers     *client.ContainerListResult
 	ContainerStats map[string]*container.StatsResponse
 }
 
-func CreateEngine(ctx context.Context, client docker.DockerClient) *MonitorEngine {
+func CreateEngine(client docker.DockerClient) *MonitorEngine {
 	return &MonitorEngine{
-		ctx:    ctx,
 		Client: client,
 	}
 }
 
-func (eng *MonitorEngine) Start() error {
-	if err := eng.refreshContainers(); err != nil {
+func (eng *MonitorEngine) Start(ctx context.Context) error {
+	if err := eng.refreshContainers(ctx); err != nil {
 		return err
 	}
 
 	eng.ContainerStats = make(map[string]*container.StatsResponse)
 
 	for _, container := range eng.Containers.Items {
-		eng.getContainerStats(container.ID)
+		eng.getContainerStats(ctx, container.ID)
 	}
 
 	return nil
 }
 
-// TODO: Refactor to only set engine.containers with active containers only.
-func (eng *MonitorEngine) refreshContainers() error {
-	result, err := eng.Client.ListContainers(eng.ctx)
+func (eng *MonitorEngine) refreshContainers(ctx context.Context) error {
+	result, err := eng.Client.ListContainers(ctx)
 	if err != nil {
 		return err
 	}
@@ -52,8 +49,8 @@ func (eng *MonitorEngine) refreshContainers() error {
 	return nil
 }
 
-func (eng *MonitorEngine) getContainerStats(id string) {
-	stats, err := eng.Client.ListContainerStats(eng.ctx, id)
+func (eng *MonitorEngine) getContainerStats(ctx context.Context, id string) {
+	stats, err := eng.Client.ListContainerStats(ctx, id)
 	if err != nil {
 		log.Fatalf("Error Reading stats: %v\n", err)
 	}
