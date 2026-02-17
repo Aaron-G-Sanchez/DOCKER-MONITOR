@@ -14,6 +14,7 @@ type Server struct {
 	http          *http.Server
 }
 
+// Initialize a new custom server instance.
 func NewServer(monitor *engine.MonitorEngine) *Server {
 	server := &Server{
 		monitorEngine: monitor,

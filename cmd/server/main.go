@@ -29,7 +29,7 @@ func run(ctx context.Context) {
 		log.Fatalf("Error starting docker client: %v\n", err)
 	}
 
-	// Create and start the monitor engine.
+	// CREATE AND RUN THE DOCKER ENGINE.
 	engine := engine.CreateEngine(*client)
 	defer engine.Client.Close()
 
@@ -37,7 +37,7 @@ func run(ctx context.Context) {
 		log.Fatalf("Error running engine: %v\n", err)
 	}
 
-	// Create and run the server.
+	// CREATE AND RUN THE SERVER INSTANCE.
 	server := server.NewServer(engine)
 
 	go func() {
