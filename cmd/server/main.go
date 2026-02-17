@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"net/http"
 
-	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/api"
 	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/docker"
 	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/engine"
+	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/server"
 )
 
 func main() {
@@ -31,8 +33,10 @@ func run(ctx context.Context) {
 	}
 
 	// Create and run the server.
-	server := api.NewServer(engine)
-	if err := server.Start(":9876"); err != nil {
+	server := server.NewServer(engine)
+
+	fmt.Println("Starting server on :6060")
+	if err := server.Start(":6060"); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("Error starting server: %v\n", err)
 	}
 
