@@ -1,19 +1,20 @@
 package server
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/engine"
 	"github.com/gin-gonic/gin"
 )
 
-// TODO: Refactor to use http.Server
 type Server struct {
 	monitorEngine *engine.MonitorEngine
 	router        *gin.Engine
 	http          *http.Server
 }
 
+// Initialize a new custom server instance.
 func NewServer(monitor *engine.MonitorEngine) *Server {
 	server := &Server{
 		monitorEngine: monitor,
@@ -23,6 +24,7 @@ func NewServer(monitor *engine.MonitorEngine) *Server {
 	return server
 }
 
+// Assign routes and handlers to the router.
 func (s *Server) CreateRoutes() {
 	s.router.GET("/", s.handleDemo())
 }
@@ -36,6 +38,7 @@ func (s *Server) handleDemo() gin.HandlerFunc {
 	}
 }
 
+// Create http.Server instance and launch the server.
 func (s *Server) Start(addr string) error {
 	s.http = &http.Server{
 		Addr:    addr,
@@ -43,4 +46,9 @@ func (s *Server) Start(addr string) error {
 	}
 
 	return s.http.ListenAndServe()
+}
+
+// Shutdown the server.
+func (s *Server) Shutdown(ctx context.Context) error {
+	return s.http.Shutdown(ctx)
 }

@@ -12,7 +12,8 @@ type MockAPIClient struct {
 	Err                error
 }
 
-func (mock *MockAPIClient) ContainerList(ctx context.Context,
+func (mock *MockAPIClient) ContainerList(
+	ctx context.Context,
 	_ client.ContainerListOptions,
 ) (client.ContainerListResult, error) {
 	return mock.MockContainers, mock.Err
