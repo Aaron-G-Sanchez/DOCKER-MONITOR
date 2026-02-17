@@ -1,4 +1,4 @@
-package api
+package server
 
 import (
 	"net/http"
@@ -7,9 +7,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// TODO: Refactor to use http.Server
 type Server struct {
 	monitorEngine *engine.MonitorEngine
 	router        *gin.Engine
+	http          *http.Server
 }
 
 func NewServer(monitor *engine.MonitorEngine) *Server {
@@ -25,7 +27,7 @@ func (s *Server) CreateRoutes() {
 	s.router.GET("/", s.handleDemo())
 }
 
-// TODO: Replace handler function.
+// TODO: Move and replace handler function.
 func (s *Server) handleDemo() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{
@@ -35,5 +37,10 @@ func (s *Server) handleDemo() gin.HandlerFunc {
 }
 
 func (s *Server) Start(addr string) error {
-	return s.router.Run(addr)
+	s.http = &http.Server{
+		Addr:    addr,
+		Handler: s.router,
+	}
+
+	return s.http.ListenAndServe()
 }
