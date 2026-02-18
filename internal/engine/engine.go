@@ -3,7 +3,6 @@ package engine
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"sync"
 
@@ -13,7 +12,7 @@ import (
 )
 
 type MonitorEngine struct {
-	mu             sync.Mutex
+	Mu             sync.Mutex
 	Client         docker.DockerClient
 	Containers     *client.ContainerListResult
 	ContainerStats map[string]*container.StatsResponse
@@ -33,7 +32,7 @@ func (eng *MonitorEngine) Start(ctx context.Context) error {
 	eng.ContainerStats = make(map[string]*container.StatsResponse)
 
 	for _, container := range eng.Containers.Items {
-		eng.getContainerStats(ctx, container.ID)
+		go eng.getContainerStats(ctx, container.ID)
 	}
 
 	return nil
@@ -52,7 +51,8 @@ func (eng *MonitorEngine) refreshContainers(ctx context.Context) error {
 func (eng *MonitorEngine) getContainerStats(ctx context.Context, id string) {
 	stats, err := eng.Client.ListContainerStats(ctx, id)
 	if err != nil {
-		log.Fatalf("Error Reading stats: %v\n", err)
+		log.Printf("Error Reading stats: %v\n", err)
+		return
 	}
 	defer stats.Body.Close()
 
@@ -60,17 +60,20 @@ func (eng *MonitorEngine) getContainerStats(ctx context.Context, id string) {
 
 	for {
 
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
 		var statResult *container.StatsResponse
 
 		if err := decoder.Decode(&statResult); err != nil {
 			return
 		}
 
-		eng.mu.Lock()
+		eng.Mu.Lock()
 		eng.ContainerStats[id] = statResult
-		eng.mu.Unlock()
-
-		fmt.Println(eng.ContainerStats[id])
+		eng.Mu.Unlock()
 
 	}
 }
