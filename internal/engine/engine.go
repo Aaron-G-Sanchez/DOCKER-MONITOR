@@ -3,6 +3,7 @@ package engine
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"log"
 	"sync"
 
@@ -68,6 +69,11 @@ func (eng *MonitorEngine) getContainerStats(ctx context.Context, id string) {
 		var statResult *container.StatsResponse
 
 		if err := decoder.Decode(&statResult); err != nil {
+			if err == io.EOF || err == context.Canceled {
+				log.Printf("Stopping monitoring for %s (context canceled or stream ended)", id)
+			} else {
+				log.Printf("Error decoding stats for %s: %v", id, err)
+			}
 			return
 		}
 
