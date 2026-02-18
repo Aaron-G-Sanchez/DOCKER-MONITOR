@@ -1,8 +1,10 @@
 package server
 
 import (
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/docker"
@@ -47,6 +49,9 @@ func setup(containers *client.ContainerListResult, t *testing.T) *Server {
 
 	mockAPIClient := &testutils.MockAPIClient{
 		MockContainers: *containers,
+		MockContainerStats: client.ContainerStatsResult{
+			Body: io.NopCloser(strings.NewReader("")),
+		},
 	}
 
 	mockDockerClient := docker.NewClientWithMockAPI(mockAPIClient)
@@ -58,5 +63,4 @@ func setup(containers *client.ContainerListResult, t *testing.T) *Server {
 	mockServer := NewServer(mockEngine)
 
 	return mockServer
-
 }
