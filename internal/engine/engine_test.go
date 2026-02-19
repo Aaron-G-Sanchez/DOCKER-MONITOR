@@ -35,7 +35,7 @@ func TestEngine_StartSuccess(t *testing.T) {
 	}
 	mockDockerClient := docker.NewClientWithMockAPI(mockAPIClient)
 
-	mockEngine := CreateEngine(*mockDockerClient)
+	mockEngine := NewEngine(*mockDockerClient)
 
 	ctx, cancel := context.WithCancel(t.Context())
 	err := mockEngine.Start(ctx)
@@ -82,7 +82,7 @@ func TestEngine_getContainerStats(t *testing.T) {
 
 	mockDockerClient := docker.NewClientWithMockAPI(mockAPIClient)
 
-	mockEngine := CreateEngine(*mockDockerClient)
+	mockEngine := NewEngine(*mockDockerClient)
 	mockEngine.ContainerStats = make(map[string]*container.StatsResponse)
 
 	ctx, cancel := context.WithCancel(t.Context())
