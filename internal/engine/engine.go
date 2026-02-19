@@ -12,6 +12,7 @@ import (
 	"github.com/moby/moby/client"
 )
 
+// TODO: Update ContainerStats field.
 type MonitorEngine struct {
 	Mu             sync.Mutex
 	Client         docker.DockerClient
