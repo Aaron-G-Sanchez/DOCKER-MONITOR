@@ -6,20 +6,21 @@ import (
 	"github.com/moby/moby/client"
 )
 
-type MockAPIClient struct {
+type MockDockerClient struct {
 	MockContainers     client.ContainerListResult
 	MockContainerStats client.ContainerStatsResult
+	MockEventResults   client.EventsResult
 	Err                error
 }
 
-func (mock *MockAPIClient) ContainerList(
+func (mock *MockDockerClient) ContainerList(
 	ctx context.Context,
 	_ client.ContainerListOptions,
 ) (client.ContainerListResult, error) {
 	return mock.MockContainers, mock.Err
 }
 
-func (mock *MockAPIClient) ContainerStats(
+func (mock *MockDockerClient) ContainerStats(
 	ctx context.Context,
 	containerID string,
 	_ client.ContainerStatsOptions,
@@ -27,6 +28,13 @@ func (mock *MockAPIClient) ContainerStats(
 	return mock.MockContainerStats, mock.Err
 }
 
-func (mock *MockAPIClient) Close() error {
+func (mock *MockDockerClient) Events(
+	ctx context.Context,
+	_ client.EventsListOptions,
+) client.EventsResult {
+	return mock.MockEventResults
+}
+
+func (mock *MockDockerClient) Close() error {
 	return mock.Err
 }

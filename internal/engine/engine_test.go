@@ -11,6 +11,7 @@ import (
 	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/docker"
 	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/testutils"
 	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/api/types/events"
 	"github.com/moby/moby/client"
 	"github.com/stretchr/testify/assert"
 )
@@ -18,7 +19,8 @@ import (
 // TODO: Create a setup function.
 
 func TestEngine_StartSuccess(t *testing.T) {
-	mockAPIClient := &testutils.MockAPIClient{
+
+	mockAPIClient := &testutils.MockDockerClient{
 		MockContainers: client.ContainerListResult{
 			Items: []container.Summary{
 				{
@@ -30,6 +32,10 @@ func TestEngine_StartSuccess(t *testing.T) {
 		},
 		MockContainerStats: client.ContainerStatsResult{
 			Body: io.NopCloser(strings.NewReader("")),
+		},
+		MockEventResults: client.EventsResult{
+			Messages: make(chan events.Message),
+			Err:      make(chan error),
 		},
 		Err: nil,
 	}
@@ -64,7 +70,7 @@ func TestEngine_getContainerStats(t *testing.T) {
 
 	mockBody := io.NopCloser(strings.NewReader(mockStatsString))
 
-	mockAPIClient := &testutils.MockAPIClient{
+	mockAPIClient := &testutils.MockDockerClient{
 		MockContainers: client.ContainerListResult{
 			Items: []container.Summary{
 				{

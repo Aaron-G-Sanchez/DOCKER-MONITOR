@@ -52,7 +52,7 @@ func TestListContainers(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			mockAPI := &testutils.MockAPIClient{
+			mockAPI := &testutils.MockDockerClient{
 				MockContainers: tc.containers,
 				Err:            tc.err,
 			}
@@ -109,7 +109,7 @@ func TestListContainerStats(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			mockApi := &testutils.MockAPIClient{
+			mockApi := &testutils.MockDockerClient{
 				MockContainerStats: tc.containerStats,
 				Err:                tc.err,
 			}
