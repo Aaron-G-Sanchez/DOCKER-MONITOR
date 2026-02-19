@@ -30,7 +30,7 @@ func run(ctx context.Context) {
 	}
 
 	// CREATE AND RUN THE DOCKER ENGINE.
-	engine := engine.CreateEngine(*client)
+	engine := engine.NewEngine(*client)
 	defer engine.Client.Close()
 
 	if err := engine.Start(ctx); err != nil {

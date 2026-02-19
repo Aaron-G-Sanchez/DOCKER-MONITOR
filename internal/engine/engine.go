@@ -12,17 +12,17 @@ import (
 	"github.com/moby/moby/client"
 )
 
+func NewEngine(client docker.DockerClient) *MonitorEngine {
+	return &MonitorEngine{
+		Client: client,
+	}
+}
+
 type MonitorEngine struct {
 	Mu             sync.Mutex
 	Client         docker.DockerClient
 	Containers     *client.ContainerListResult
 	ContainerStats map[string]*container.StatsResponse
-}
-
-func CreateEngine(client docker.DockerClient) *MonitorEngine {
-	return &MonitorEngine{
-		Client: client,
-	}
 }
 
 func (eng *MonitorEngine) Start(ctx context.Context) error {
