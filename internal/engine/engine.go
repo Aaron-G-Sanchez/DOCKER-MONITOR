@@ -34,7 +34,7 @@ func (eng *MonitorEngine) Start(ctx context.Context) error {
 	// TODO: Add subscription to docker events.
 	// Subscribe to the client event stream and handle
 	// container start and stop events.
-	go eng.handleEvents(eventChan)
+	go eng.handleEvents(ctx, eventChan)
 	go eng.monitorEvents(ctx, eventChan)
 
 	if err := eng.refreshContainers(ctx); err != nil {
@@ -116,9 +116,17 @@ func (eng *MonitorEngine) getContainerStats(ctx context.Context, id string) {
 	}
 }
 
-func (eng *MonitorEngine) handleEvents(eventChan <-chan events.Message) {
-	for e := range eventChan {
-		fmt.Println(e.Action)
-		// TODO: Add event handling for start and die events.
+func (eng *MonitorEngine) handleEvents(ctx context.Context, eventChan <-chan events.Message) {
+	addContainer := func(ctx context.Context, id string) {
+		go eng.getContainerStats(ctx, id)
 	}
+
+	// TODO: Add event handling for die events.
+	for e := range eventChan {
+		// fmt.Println(e.Action)
+		if e.Action == events.ActionStart {
+			addContainer(ctx, e.Actor.ID)
+		}
+	}
+
 }
