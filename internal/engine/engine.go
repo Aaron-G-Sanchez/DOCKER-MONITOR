@@ -123,10 +123,21 @@ func (eng *MonitorEngine) handleEvents(ctx context.Context, eventChan <-chan eve
 
 	// TODO: Add event handling for die events.
 	for e := range eventChan {
-		// fmt.Println(e.Action)
-		if e.Action == events.ActionStart {
-			addContainer(ctx, e.Actor.ID)
+		// TODO: Add check to ensure container id is present.
+		if e.Actor.ID == "" {
+			continue
 		}
+
+		switch e.Action {
+		case events.ActionStart:
+			// TODO: Add check to make sure container is not already having stats collected.
+			if _, ok := eng.ContainerStats[e.Actor.ID]; !ok {
+				addContainer(ctx, e.Actor.ID)
+			}
+		default:
+			continue
+		}
+
 	}
 
 }
