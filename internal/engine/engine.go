@@ -117,7 +117,7 @@ func (eng *MonitorEngine) getContainerStats(ctx context.Context, id string) {
 }
 
 func (eng *MonitorEngine) handleEvents(ctx context.Context, eventChan <-chan events.Message) {
-	addContainer := func(ctx context.Context, id string) {
+	collectStats := func(ctx context.Context, id string) {
 		go eng.getContainerStats(ctx, id)
 	}
 
@@ -131,13 +131,11 @@ func (eng *MonitorEngine) handleEvents(ctx context.Context, eventChan <-chan eve
 		switch e.Action {
 		case events.ActionStart:
 			// TODO: Add check to make sure container is not already having stats collected.
-			if _, ok := eng.ContainerStats[e.Actor.ID]; !ok {
-				addContainer(ctx, e.Actor.ID)
+			if _, present := eng.ContainerStats[e.Actor.ID]; !present {
+				collectStats(ctx, e.Actor.ID)
 			}
 		default:
 			continue
 		}
-
 	}
-
 }
