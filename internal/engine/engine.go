@@ -3,29 +3,40 @@ package engine
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"sync"
 
 	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/docker"
 	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/api/types/events"
 	"github.com/moby/moby/client"
 )
 
-func NewEngine(client docker.DockerClient) *MonitorEngine {
+func NewEngine(client docker.Client) *MonitorEngine {
 	return &MonitorEngine{
 		Client: client,
 	}
 }
 
+// TODO: Update ContainerStats field.
 type MonitorEngine struct {
 	Mu             sync.Mutex
-	Client         docker.DockerClient
+	Client         docker.Client
 	Containers     *client.ContainerListResult
 	ContainerStats map[string]*container.StatsResponse
 }
 
 func (eng *MonitorEngine) Start(ctx context.Context) error {
+	eventChan := make(chan events.Message)
+
+	// TODO: Add subscription to docker events.
+	// Subscribe to the client event stream and handle
+	// container start and stop events.
+	go eng.handleEvents(ctx, eventChan)
+	go eng.monitorEvents(ctx, eventChan)
+
 	if err := eng.refreshContainers(ctx); err != nil {
 		return err
 	}
@@ -37,6 +48,27 @@ func (eng *MonitorEngine) Start(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (eng *MonitorEngine) monitorEvents(
+	ctx context.Context,
+	output chan<- events.Message,
+) {
+	defer close(output)
+	res := eng.Client.Events(ctx, client.EventsListOptions{})
+
+	for {
+		select {
+		case <-ctx.Done():
+			fmt.Printf("Event monitor closed\n")
+			return
+		case event := <-res.Messages:
+			output <- event
+		case err := <-res.Err:
+			log.Printf("Error retrieving events: %v", err)
+			return
+		}
+	}
 }
 
 func (eng *MonitorEngine) refreshContainers(ctx context.Context) error {
@@ -70,9 +102,9 @@ func (eng *MonitorEngine) getContainerStats(ctx context.Context, id string) {
 
 		if err := decoder.Decode(&statResult); err != nil {
 			if err == io.EOF || err == context.Canceled {
-				log.Printf("Stopping monitoring for %s (context canceled or stream ended)", id)
+				log.Printf("Stopping monitoring for %s (context canceled or stream ended)\n", id)
 			} else {
-				log.Printf("Error decoding stats for %s: %v", id, err)
+				log.Printf("Error decoding stats for %s: %v\n", id, err)
 			}
 			return
 		}
@@ -81,5 +113,29 @@ func (eng *MonitorEngine) getContainerStats(ctx context.Context, id string) {
 		eng.ContainerStats[id] = statResult
 		eng.Mu.Unlock()
 
+	}
+}
+
+func (eng *MonitorEngine) handleEvents(ctx context.Context, eventChan <-chan events.Message) {
+	collectStats := func(ctx context.Context, id string) {
+		go eng.getContainerStats(ctx, id)
+	}
+
+	// TODO: Add event handling for die events.
+	for e := range eventChan {
+		// TODO: Add check to ensure container id is present.
+		if e.Actor.ID == "" {
+			continue
+		}
+
+		switch e.Action {
+		case events.ActionStart:
+			// TODO: Add check to make sure container is not already having stats collected.
+			if _, present := eng.ContainerStats[e.Actor.ID]; !present {
+				collectStats(ctx, e.Actor.ID)
+			}
+		default:
+			continue
+		}
 	}
 }

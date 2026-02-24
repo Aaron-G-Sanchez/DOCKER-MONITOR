@@ -12,6 +12,7 @@ import (
 	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/testutils"
 	"github.com/gin-gonic/gin"
 	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/api/types/events"
 	"github.com/moby/moby/client"
 	"github.com/stretchr/testify/assert"
 )
@@ -47,10 +48,14 @@ func TestServer(t *testing.T) {
 
 func setup(containers *client.ContainerListResult, t *testing.T) *Server {
 
-	mockAPIClient := &testutils.MockAPIClient{
+	mockAPIClient := &testutils.MockDockerClient{
 		MockContainers: *containers,
 		MockContainerStats: client.ContainerStatsResult{
 			Body: io.NopCloser(strings.NewReader("")),
+		},
+		MockEventResults: client.EventsResult{
+			Messages: make(chan events.Message),
+			Err:      make(chan error),
 		},
 	}
 

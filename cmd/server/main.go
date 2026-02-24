@@ -48,7 +48,7 @@ func run(ctx context.Context) {
 	}()
 
 	<-ctx.Done()
-	fmt.Println("Shutdown initiated")
+	fmt.Printf("Shutdown initiated...\n")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -57,5 +57,5 @@ func run(ctx context.Context) {
 		log.Fatalf("Server forced to shutdown: %v\n", err)
 	}
 
-	fmt.Print("Server exiting.")
+	fmt.Printf("Server exiting.\n")
 }
