@@ -27,6 +27,8 @@ func NewServer(monitor *engine.MonitorEngine) *Server {
 
 // Assign routes and handlers to the router.
 func (s *Server) CreateRoutes() {
+	s.router.Static("/static", "./web/static")
+
 	s.router.GET("/favicon.ico", func(ctx *gin.Context) {
 		ctx.Status(http.StatusNoContent)
 	})
