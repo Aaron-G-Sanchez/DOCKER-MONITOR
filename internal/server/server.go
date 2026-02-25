@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/engine"
+	"github.com/aaron-g-sanchez/DOCKER-MONITOR/web/templates"
 	"github.com/gin-gonic/gin"
 )
 
@@ -26,7 +27,17 @@ func NewServer(monitor *engine.MonitorEngine) *Server {
 
 // Assign routes and handlers to the router.
 func (s *Server) CreateRoutes() {
-	s.router.GET("/", s.handleDemo())
+	s.router.Static("/static", "./web/static")
+
+	s.router.GET("/favicon.ico", func(ctx *gin.Context) {
+		ctx.Status(http.StatusNoContent)
+	})
+
+	s.router.GET("/", func(ctx *gin.Context) {
+		render(ctx, http.StatusOK, templates.Home())
+	})
+
+	s.router.GET("/demo", s.handleDemo())
 }
 
 // TODO: Move and replace handler function.

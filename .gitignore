@@ -33,3 +33,9 @@ go.work.sum
 
 # Scratch Files
 *.txt
+
+# Node_Modules
+node_modules/
+
+# Js
+web/static
