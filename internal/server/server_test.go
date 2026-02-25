@@ -46,6 +46,20 @@ func TestServer(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
+func TestHomeRoute(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	mockServer := NewServer(nil)
+
+	w := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/", nil)
+
+	mockServer.router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "DASHBOARD")
+}
+
 func setup(containers *client.ContainerListResult, t *testing.T) *Server {
 
 	mockAPIClient := &testutils.MockDockerClient{
