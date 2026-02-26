@@ -1,0 +1,58 @@
+#:schema https://json.schemastore.org/any.json
+
+env_files = []
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  bin = "./tmp/main"
+  cmd = "cd ./web/src && npm run build && cd ../.. && templ generate && go build -o ./tmp/main ./cmd/server"
+  delay = 0
+  entrypoint = ["./tmp/main"]
+  exclude_dir = [
+    "assets",
+    "tmp",
+    "vendor",
+    "testdata",
+    "web/src/node_modules",
+    "internal/testutils",
+    "web/static"
+    ]
+  exclude_regex = [
+    "_test.go",
+    ".*_templ.go",
+  ]
+  exclude_unchanged = false
+  follow_symlink = false
+  full_bin = ""
+  ignore_dangerous_root_dir = false
+  include_ext = [
+    "go",
+    "tpl",
+    "tmpl",
+    "templ",
+    "html",
+    "ts",
+  ]
+  
+[color]
+  app = ""
+  build = "yellow"
+  main = "magenta"
+  runner = "green"
+  watcher = "cyan"
+
+[log]
+  main_only = true
+
+[misc]
+  clean_on_exit = true
+
+[proxy]
+  enabled = true
+  app_port = 6060
+  proxy_port = 3001
+
+[screen]
+  clear_on_rebuild = true
+  keep_scroll = true
