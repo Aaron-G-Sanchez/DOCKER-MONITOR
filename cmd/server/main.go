@@ -48,7 +48,7 @@ func run(ctx context.Context) {
 	}()
 
 	<-ctx.Done()
-	fmt.Printf("Shutdown initiated...\n")
+	fmt.Printf("\nShutdown initiated...\n")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

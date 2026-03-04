@@ -2,11 +2,9 @@ package engine
 
 import (
 	"context"
-	"encoding/json"
 	"io"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/docker"
 	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/testutils"
@@ -20,15 +18,18 @@ import (
 
 func TestEngine_StartSuccess(t *testing.T) {
 
+	mockSum := &container.Summary{
+		ID:    "a1b2c3",
+		Names: []string{"mock-container"},
+		State: container.StateExited,
+		Image: "mock-image",
+	}
+
+	mockContainer := NewContainerFromListContainers(*mockSum)
+
 	mockAPIClient := &testutils.MockDockerClient{
 		MockContainers: client.ContainerListResult{
-			Items: []container.Summary{
-				{
-					ID:    "1234",
-					Names: []string{"mock-container"},
-					Image: "mock-image",
-				},
-			},
+			Items: []container.Summary{*mockSum},
 		},
 		MockContainerStats: client.ContainerStatsResult{
 			Body: io.NopCloser(strings.NewReader("")),
@@ -50,60 +51,58 @@ func TestEngine_StartSuccess(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(
 		t,
-		mockAPIClient.MockContainers,
-		*mockEngine.Containers,
+		mockEngine.Containers["a1b2c3"],
+		mockContainer,
 		"Should set the containers field.",
 	)
-
 }
 
-func TestEngine_getContainerStats(t *testing.T) {
-	mockStatsResponse := container.StatsResponse{
-		ID:     "1234",
-		Name:   "mock-container",
-		OSType: "ubuntu",
+func TestGetOrCreateContainer_ExistingContainer(t *testing.T) {
+	mockApi := &testutils.MockDockerClient{}
+	mockClient := docker.NewClientWithMockAPI(mockApi)
+
+	eng := NewEngine(*mockClient)
+
+	mockContainer := &Container{
+		id:    "a1b2c3",
+		names: []string{"mock-container"},
 	}
-	mockStatsResponseJson, err := json.Marshal(mockStatsResponse)
-	assert.NoError(t, err)
+	eng.Containers["a1b2ce"] = mockContainer
 
-	mockStatsString := string(mockStatsResponseJson) + "\n"
+	got, err := eng.getOrCreateContainer(t.Context(), "a1b2ce")
+	assert.NoError(t, err, "Should not throw error")
 
-	mockBody := io.NopCloser(strings.NewReader(mockStatsString))
+	assert.Equal(t, mockContainer, got)
+}
 
-	mockAPIClient := &testutils.MockDockerClient{
-		MockContainers: client.ContainerListResult{
-			Items: []container.Summary{
-				{
-					ID:    "1234",
-					Names: []string{"mock-container"},
-					Image: "mock-image",
-				},
-			},
+func TestGetOrCreateContainer_NewContainer(t *testing.T) {
+	expectedContainer := &Container{
+		id:    "123",
+		names: []string{"mock-container-inspect"},
+		state: container.StateExited,
+	}
+
+	mockContainerInspect := container.InspectResponse{
+		ID:   "123",
+		Name: "mock-container-inspect",
+		State: &container.State{
+			Status: container.StateExited,
 		},
-		MockContainerStats: client.ContainerStatsResult{
-			Body: mockBody,
+	}
+
+	mockApi := &testutils.MockDockerClient{
+		MockContainerInspect: client.ContainerInspectResult{
+			Container: mockContainerInspect,
 		},
 		Err: nil,
 	}
 
-	mockDockerClient := docker.NewClientWithMockAPI(mockAPIClient)
+	mockClient := docker.NewClientWithMockAPI(mockApi)
 
-	mockEngine := NewEngine(*mockDockerClient)
-	mockEngine.ContainerStats = make(map[string]*container.StatsResponse)
+	eng := NewEngine(*mockClient)
 
-	ctx, cancel := context.WithCancel(t.Context())
-	defer cancel()
+	got, err := eng.getOrCreateContainer(t.Context(), "123")
 
-	go mockEngine.getContainerStats(ctx, "1234")
-
-	assert.Eventually(t, func() bool {
-		mockEngine.Mu.Lock()
-		defer mockEngine.Mu.Unlock()
-		return mockEngine.ContainerStats["1234"] != nil
-
-	}, time.Second, 100*time.Millisecond, "Should collect container stats")
-
-	mockEngine.Mu.Lock()
-	assert.Equal(t, "1234", mockEngine.ContainerStats["1234"].ID)
-	mockEngine.Mu.Unlock()
+	assert.NoError(t, err, "Should not throw error")
+	assert.Equal(t, expectedContainer, got, "Should create new container")
 }

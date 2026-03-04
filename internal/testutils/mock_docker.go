@@ -7,10 +7,19 @@ import (
 )
 
 type MockDockerClient struct {
-	MockContainers     client.ContainerListResult
-	MockContainerStats client.ContainerStatsResult
-	MockEventResults   client.EventsResult
-	Err                error
+	MockContainerInspect client.ContainerInspectResult
+	MockContainers       client.ContainerListResult
+	MockContainerStats   client.ContainerStatsResult
+	MockEventResults     client.EventsResult
+	Err                  error
+}
+
+func (mock *MockDockerClient) ContainerInspect(
+	ctx context.Context,
+	_ string,
+	_ client.ContainerInspectOptions,
+) (client.ContainerInspectResult, error) {
+	return mock.MockContainerInspect, mock.Err
 }
 
 func (mock *MockDockerClient) ContainerList(

@@ -20,6 +20,30 @@ func TestNewClient_Success(t *testing.T) {
 	assert.NotNil(t, client)
 }
 
+func TestContainerInspect(t *testing.T) {
+	mockContainerInspect := container.InspectResponse{
+		ID:   "123",
+		Name: "mock-container-inspect",
+		State: &container.State{
+			Status: container.StateExited,
+		},
+	}
+
+	mockApi := &testutils.MockDockerClient{
+		MockContainerInspect: client.ContainerInspectResult{
+			Container: mockContainerInspect,
+			Raw:       json.RawMessage{},
+		},
+		Err: nil,
+	}
+
+	mockClient := NewClientWithMockAPI(mockApi)
+
+	containerRes, err := mockClient.InspectContainer(t.Context(), "123")
+	assert.NoError(t, err, "Should not throw error")
+	assert.Equal(t, mockContainerInspect, containerRes.Container)
+}
+
 func TestListContainers(t *testing.T) {
 	tests := []struct {
 		name       string

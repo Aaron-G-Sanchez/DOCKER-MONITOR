@@ -2,32 +2,29 @@ package engine
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"sync"
 
 	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/docker"
-	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/api/types/events"
 	"github.com/moby/moby/client"
 )
 
 func NewEngine(client docker.Client) *MonitorEngine {
 	return &MonitorEngine{
-		Client: client,
+		Client:     client,
+		Containers: make(map[string]*Container),
 	}
 }
 
-// TODO: Update ContainerStats field.
 type MonitorEngine struct {
-	Mu             sync.Mutex
-	Client         docker.Client
-	Containers     *client.ContainerListResult
-	ContainerStats map[string]*container.StatsResponse
+	Mu         sync.RWMutex
+	Client     docker.Client
+	Containers map[string]*Container
 }
 
+// Launches event subscription and container monitoring process.
 func (eng *MonitorEngine) Start(ctx context.Context) error {
 	eventChan := make(chan events.Message)
 
@@ -37,19 +34,36 @@ func (eng *MonitorEngine) Start(ctx context.Context) error {
 	go eng.handleEvents(ctx, eventChan)
 	go eng.monitorEvents(ctx, eventChan)
 
-	if err := eng.refreshContainers(ctx); err != nil {
+	if err := eng.loadContainers(ctx); err != nil {
 		return err
-	}
-
-	eng.ContainerStats = make(map[string]*container.StatsResponse)
-
-	for _, container := range eng.Containers.Items {
-		go eng.getContainerStats(ctx, container.ID)
 	}
 
 	return nil
 }
 
+// Loads containers from Docker host and starts collecting stats for
+// any running containers.
+func (eng *MonitorEngine) loadContainers(ctx context.Context) error {
+	result, err := eng.Client.ListContainers(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, item := range result.Items {
+		container := NewContainerFromListContainers(item)
+		eng.Containers[container.id] = container
+
+		if container.IsRunning() {
+			childCtx, cancel := context.WithCancel(ctx)
+			container.cancelFunc = cancel
+			go container.CollectStats(childCtx, &eng.Client)
+		}
+	}
+
+	return nil
+}
+
+// Subscribes and outputs docker daemon events.
 func (eng *MonitorEngine) monitorEvents(
 	ctx context.Context,
 	output chan<- events.Message,
@@ -71,71 +85,82 @@ func (eng *MonitorEngine) monitorEvents(
 	}
 }
 
-func (eng *MonitorEngine) refreshContainers(ctx context.Context) error {
-	result, err := eng.Client.ListContainers(ctx)
-	if err != nil {
-		return err
-	}
-
-	eng.Containers = &result
-	return nil
-}
-
-func (eng *MonitorEngine) getContainerStats(ctx context.Context, id string) {
-	stats, err := eng.Client.ListContainerStats(ctx, id)
-	if err != nil {
-		log.Printf("Error Reading stats: %v\n", err)
-		return
-	}
-	defer stats.Body.Close()
-
-	decoder := json.NewDecoder(stats.Body)
-
-	for {
-
-		select {
-		case <-ctx.Done():
-			return
-		default:
-		}
-		var statResult *container.StatsResponse
-
-		if err := decoder.Decode(&statResult); err != nil {
-			if err == io.EOF || err == context.Canceled {
-				log.Printf("Stopping monitoring for %s (context canceled or stream ended)\n", id)
-			} else {
-				log.Printf("Error decoding stats for %s: %v\n", id, err)
-			}
-			return
-		}
-
-		eng.Mu.Lock()
-		eng.ContainerStats[id] = statResult
-		eng.Mu.Unlock()
-
-	}
-}
-
-func (eng *MonitorEngine) handleEvents(ctx context.Context, eventChan <-chan events.Message) {
-	collectStats := func(ctx context.Context, id string) {
-		go eng.getContainerStats(ctx, id)
-	}
-
-	// TODO: Add event handling for die events.
+// Checks incoming events.
+func (eng *MonitorEngine) handleEvents(
+	ctx context.Context,
+	eventChan <-chan events.Message,
+) {
+	// TODO: Add event handling for die events. <---- [STOPPED HERE]
 	for e := range eventChan {
-		// TODO: Add check to ensure container id is present.
 		if e.Actor.ID == "" {
 			continue
 		}
 
 		switch e.Action {
 		case events.ActionStart:
-			// TODO: Add check to make sure container is not already having stats collected.
-			if _, present := eng.ContainerStats[e.Actor.ID]; !present {
-				collectStats(ctx, e.Actor.ID)
+			container, err := eng.getOrCreateContainer(ctx, e.Actor.ID)
+			if err != nil {
+				log.Printf("Error getting container: %v\n", err)
+				continue
 			}
+			eng.collectStats(ctx, container)
+		case events.ActionDie:
+			eng.stopCollection(e.Actor.ID)
 		default:
 			continue
 		}
 	}
+}
+
+// Creates new cancellable context and starts stat collection for the provided
+// container.
+func (eng *MonitorEngine) collectStats(
+	ctx context.Context,
+	container *Container,
+) {
+	container.mu.Lock()
+	childCtx, cancel := context.WithCancel(ctx)
+	container.cancelFunc = cancel
+	container.mu.Unlock()
+
+	go container.CollectStats(childCtx, &eng.Client)
+}
+
+// Checks for a valid container on the MonitorEngine or creates a new one.
+func (eng *MonitorEngine) getOrCreateContainer(
+	ctx context.Context,
+	id string,
+) (*Container, error) {
+	eng.Mu.RLock()
+	container, exists := eng.Containers[id]
+	eng.Mu.RUnlock()
+
+	if exists {
+		return container, nil
+	}
+
+	info, err := eng.Client.InspectContainer(ctx, id)
+	if err != nil {
+		log.Printf("Error inspecting container %s: %v", id, err)
+		return nil, err
+	}
+
+	container = NewContainerFromInspectContainer(info.Container)
+
+	eng.Mu.Lock()
+	if con, exist := eng.Containers[id]; exist {
+		eng.Mu.Unlock()
+		return con, nil
+	}
+
+	eng.Containers[id] = container
+	eng.Mu.Unlock()
+
+	return container, nil
+}
+
+// TODO: Implement.
+// Stops stat collection for the provided container.
+func (eng *MonitorEngine) stopCollection(id string) {
+	fmt.Printf("%s\n", id)
 }
