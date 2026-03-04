@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/docker"
+	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/api/types/events"
 	"github.com/moby/moby/client"
 )
@@ -131,11 +132,14 @@ func (eng *MonitorEngine) getOrCreateContainer(
 	id string,
 ) (*Container, error) {
 	eng.Mu.RLock()
-	container, exists := eng.Containers[id]
+	con, exists := eng.Containers[id]
 	eng.Mu.RUnlock()
 
 	if exists {
-		return container, nil
+		con.mu.Lock()
+		con.state = container.StateRunning
+		con.mu.Unlock()
+		return con, nil
 	}
 
 	info, err := eng.Client.InspectContainer(ctx, id)
@@ -144,26 +148,28 @@ func (eng *MonitorEngine) getOrCreateContainer(
 		return nil, err
 	}
 
-	container = NewContainerFromInspectContainer(info.Container)
+	con = NewContainerFromInspectContainer(info.Container)
 
 	eng.Mu.Lock()
 	if con, exist := eng.Containers[id]; exist {
 		eng.Mu.Unlock()
+		con.mu.Lock()
+		con.state = container.StateRunning
+		con.mu.Unlock()
 		return con, nil
 	}
 
-	eng.Containers[id] = container
+	eng.Containers[id] = con
 	eng.Mu.Unlock()
 
-	return container, nil
+	return con, nil
 }
 
-// TODO: Implement.
 // Stops stat collection for the provided container.
 func (eng *MonitorEngine) stopStatCollection(id string) {
 	eng.Mu.Lock()
 	// Find the container in eng.Containers.
-	container, exist := eng.Containers[id]
+	con, exist := eng.Containers[id]
 	if !exist {
 		log.Printf("No container with id: %v\n", id)
 		eng.Mu.Unlock()
@@ -171,5 +177,8 @@ func (eng *MonitorEngine) stopStatCollection(id string) {
 	eng.Mu.Unlock()
 
 	// Call the container.cancel function.
-	container.cancelFunc()
+	con.mu.Lock()
+	con.cancelFunc()
+	con.state = container.StateExited
+	con.mu.Unlock()
 }
