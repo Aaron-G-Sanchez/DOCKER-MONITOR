@@ -3,6 +3,7 @@ package engine
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"sync"
@@ -41,11 +42,20 @@ type Container struct {
 	cancelFunc context.CancelFunc
 }
 
-func NewContainer(s container.Summary) *Container {
+// Creates a new container from ListContainer response.
+func NewContainerFromListContainers(s container.Summary) *Container {
 	return &Container{
 		id:    s.ID,
 		names: s.Names,
 		state: s.State,
+	}
+}
+
+func NewContainerFromInspectContainer(s container.InspectResponse) *Container {
+	return &Container{
+		id:    s.ID,
+		names: []string{s.Name},
+		state: s.State.Status,
 	}
 }
 
@@ -87,6 +97,7 @@ func (c *Container) CollectStats(ctx context.Context, client *docker.Client) {
 
 		c.mu.Lock()
 		c.stats = statEntry
+		fmt.Printf("CONTAINER: %s\n", statEntry.Name)
 		c.mu.Unlock()
 
 	}

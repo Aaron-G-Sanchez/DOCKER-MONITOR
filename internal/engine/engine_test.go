@@ -25,7 +25,7 @@ func TestEngine_StartSuccess(t *testing.T) {
 		Image: "mock-image",
 	}
 
-	mockContainer := NewContainer(*mockSum)
+	mockContainer := NewContainerFromListContainers(*mockSum)
 
 	mockAPIClient := &testutils.MockDockerClient{
 		MockContainers: client.ContainerListResult{
