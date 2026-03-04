@@ -13,22 +13,22 @@ import (
 
 func NewEngine(client docker.Client) *MonitorEngine {
 	return &MonitorEngine{
-		Client: client,
+		Client:     client,
+		Containers: make(map[string]*Container),
 	}
 }
 
 // TODO: #33 Update ContainerStats field.
 type MonitorEngine struct {
-	Mu         sync.Mutex
+	Mu         sync.RWMutex
 	Client     docker.Client
 	Containers map[string]*Container
 }
 
 func (eng *MonitorEngine) Start(ctx context.Context) error {
 	eventChan := make(chan events.Message)
-	eng.Containers = make(map[string]*Container)
 
-	// TODO: Add subscription to docker events. <--- STOPPED HERE.
+	// TODO: Add subscription to docker events.
 	// Subscribe to the client event stream and handle
 	// container start and stop events.
 	go eng.handleEvents(ctx, eventChan)
@@ -95,8 +95,8 @@ func (eng *MonitorEngine) handleEvents(ctx context.Context, eventChan <-chan eve
 		go container.CollectStats(childCtx, &eng.Client)
 	}
 
+	// TODO: Create new container and start stat collection. <----- [STOPPED HERE]
 	// TODO: Add event handling for die events.
-	// TODO: Create new container and start stat collection.
 	for e := range eventChan {
 
 		if e.Actor.ID == "" {

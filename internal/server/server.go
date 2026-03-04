@@ -43,8 +43,12 @@ func (s *Server) CreateRoutes() {
 // TODO: Move and replace handler function.
 func (s *Server) handleDemo() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+		s.monitorEngine.Mu.RLock()
+		containers := s.monitorEngine.Containers
+		s.monitorEngine.Mu.RUnlock()
+
 		ctx.JSON(http.StatusOK, gin.H{
-			"containers": *s.monitorEngine.Containers,
+			"containers": containers,
 		})
 	}
 }
