@@ -8,6 +8,7 @@ import (
 
 // Interface to wrap the docker sdk client.
 type DockerClient interface {
+	ContainerInspect(ctx context.Context, containerID string, options client.ContainerInspectOptions) (client.ContainerInspectResult, error)
 	ContainerList(ctx context.Context, options client.ContainerListOptions) (client.ContainerListResult, error)
 	ContainerStats(ctx context.Context, containerID string, options client.ContainerStatsOptions) (client.ContainerStatsResult, error)
 	Events(ctx context.Context, options client.EventsListOptions) client.EventsResult
@@ -33,6 +34,10 @@ func NewClientWithMockAPI(mock DockerClient) *Client {
 // Client that contains docker client or mock client.
 type Client struct {
 	api DockerClient
+}
+
+func (c *Client) InspectContainer(ctx context.Context, containerID string) (client.ContainerInspectResult, error) {
+	return c.api.ContainerInspect(ctx, containerID, client.ContainerInspectOptions{})
 }
 
 // TODO: Pass the options as param to ListContainers.

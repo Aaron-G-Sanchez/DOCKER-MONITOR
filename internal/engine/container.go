@@ -53,7 +53,6 @@ func (c *Container) IsRunning() bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	return c.state == "running"
-
 }
 
 func (c *Container) CollectStats(ctx context.Context, client *docker.Client) {
