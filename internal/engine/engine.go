@@ -28,7 +28,6 @@ type MonitorEngine struct {
 func (eng *MonitorEngine) Start(ctx context.Context) error {
 	eventChan := make(chan events.Message)
 
-	// TODO: Add subscription to docker events.
 	// Subscribe to the client event stream and handle
 	// container start and stop events.
 	go eng.handleEvents(ctx, eventChan)
@@ -105,7 +104,7 @@ func (eng *MonitorEngine) handleEvents(
 			}
 			eng.collectStats(ctx, container)
 		case events.ActionDie:
-			eng.stopCollection(e.Actor.ID)
+			eng.stopStatCollection(e.Actor.ID)
 		default:
 			continue
 		}
@@ -161,6 +160,16 @@ func (eng *MonitorEngine) getOrCreateContainer(
 
 // TODO: Implement.
 // Stops stat collection for the provided container.
-func (eng *MonitorEngine) stopCollection(id string) {
-	fmt.Printf("%s\n", id)
+func (eng *MonitorEngine) stopStatCollection(id string) {
+	eng.Mu.Lock()
+	// Find the container in eng.Containers.
+	container, exist := eng.Containers[id]
+	if !exist {
+		log.Printf("No container with id: %v\n", id)
+		eng.Mu.Unlock()
+	}
+	eng.Mu.Unlock()
+
+	// Call the container.cancel function.
+	container.cancelFunc()
 }

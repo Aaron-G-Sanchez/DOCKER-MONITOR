@@ -3,7 +3,6 @@ package engine
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"sync"
@@ -98,7 +97,6 @@ func (c *Container) CollectStats(ctx context.Context, client *docker.Client) {
 
 		c.mu.Lock()
 		c.stats = statEntry
-		fmt.Printf("CONTAINER: %s\n", statEntry.Name)
 		c.mu.Unlock()
 
 	}
