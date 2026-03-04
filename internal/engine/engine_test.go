@@ -57,4 +57,52 @@ func TestEngine_StartSuccess(t *testing.T) {
 	)
 }
 
-// TODO: Add test for loadContainers and event subscription.
+func TestGetOrCreateContainer_ExistingContainer(t *testing.T) {
+	mockApi := &testutils.MockDockerClient{}
+	mockClient := docker.NewClientWithMockAPI(mockApi)
+
+	eng := NewEngine(*mockClient)
+
+	mockContainer := &Container{
+		id:    "a1b2c3",
+		names: []string{"mock-container"},
+	}
+	eng.Containers["a1b2ce"] = mockContainer
+
+	got, err := eng.getOrCreateContainer(t.Context(), "a1b2ce")
+	assert.NoError(t, err, "Should not throw error")
+
+	assert.Equal(t, mockContainer, got)
+}
+
+func TestGetOrCreateContainer_NewContainer(t *testing.T) {
+	expectedContainer := &Container{
+		id:    "123",
+		names: []string{"mock-container-inspect"},
+		state: container.StateExited,
+	}
+
+	mockContainerInspect := container.InspectResponse{
+		ID:   "123",
+		Name: "mock-container-inspect",
+		State: &container.State{
+			Status: container.StateExited,
+		},
+	}
+
+	mockApi := &testutils.MockDockerClient{
+		MockContainerInspect: client.ContainerInspectResult{
+			Container: mockContainerInspect,
+		},
+		Err: nil,
+	}
+
+	mockClient := docker.NewClientWithMockAPI(mockApi)
+
+	eng := NewEngine(*mockClient)
+
+	got, err := eng.getOrCreateContainer(t.Context(), "123")
+
+	assert.NoError(t, err, "Should not throw error")
+	assert.Equal(t, expectedContainer, got, "Should create new container")
+}

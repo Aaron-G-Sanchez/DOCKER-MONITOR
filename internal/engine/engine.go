@@ -18,7 +18,6 @@ func NewEngine(client docker.Client) *MonitorEngine {
 	}
 }
 
-// TODO: #33 Update ContainerStats field.
 type MonitorEngine struct {
 	Mu         sync.RWMutex
 	Client     docker.Client
@@ -91,8 +90,7 @@ func (eng *MonitorEngine) handleEvents(
 	ctx context.Context,
 	eventChan <-chan events.Message,
 ) {
-	// TODO: Create new container and start stat collection. <----- [STOPPED HERE]
-	// TODO: Add event handling for die events.
+	// TODO: Add event handling for die events. <---- [STOPPED HERE]
 	for e := range eventChan {
 		if e.Actor.ID == "" {
 			continue
@@ -106,6 +104,8 @@ func (eng *MonitorEngine) handleEvents(
 				continue
 			}
 			eng.collectStats(ctx, container)
+		case events.ActionDie:
+			eng.stopCollection(e.Actor.ID)
 		default:
 			continue
 		}
@@ -157,4 +157,10 @@ func (eng *MonitorEngine) getOrCreateContainer(
 	eng.Mu.Unlock()
 
 	return container, nil
+}
+
+// TODO: Implement.
+// Stops stat collection for the provided container.
+func (eng *MonitorEngine) stopCollection(id string) {
+	fmt.Printf("%s\n", id)
 }

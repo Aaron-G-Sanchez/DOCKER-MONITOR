@@ -51,6 +51,7 @@ func NewContainerFromListContainers(s container.Summary) *Container {
 	}
 }
 
+// Creates a new container from InspectContainer response.
 func NewContainerFromInspectContainer(s container.InspectResponse) *Container {
 	return &Container{
 		id:    s.ID,

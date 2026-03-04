@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/docker"
 	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/engine"
+	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/server"
 )
 
 func main() {
@@ -35,24 +38,24 @@ func run(ctx context.Context) {
 	}
 
 	// CREATE AND RUN THE SERVER INSTANCE.
-	// server := server.NewServer(engine)
+	server := server.NewServer(engine)
 
-	// go func() {
-	// 	fmt.Println("Starting server on :6060")
-	// 	if err := server.Start(":6060"); err != nil && err != http.ErrServerClosed {
-	// 		log.Fatalf("Error starting server: %v\n", err)
-	// 	}
-	// }()
+	go func() {
+		fmt.Println("Starting server on :6060")
+		if err := server.Start(":6060"); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Error starting server: %v\n", err)
+		}
+	}()
 
 	<-ctx.Done()
 	fmt.Printf("\nShutdown initiated...\n")
 
-	// shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	// defer cancel()
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-	// if err := server.Shutdown(shutdownCtx); err != nil {
-	// 	log.Fatalf("Server forced to shutdown: %v\n", err)
-	// }
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		log.Fatalf("Server forced to shutdown: %v\n", err)
+	}
 
 	fmt.Printf("Server exiting.\n")
 }
