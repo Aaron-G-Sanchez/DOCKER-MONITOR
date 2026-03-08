@@ -3,6 +3,7 @@ package engine
 import (
 	"testing"
 
+	"github.com/moby/moby/api/types/container"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -31,4 +32,18 @@ func TestFormat(t *testing.T) {
 			assert.Equal(t, tc.expected, got)
 		})
 	}
+}
+
+func TestMemUsage(t *testing.T) {
+	s := &container.MemoryStats{
+		Usage: 100600,
+		Stats: map[string]uint64{
+			"inactive_file": 600,
+		},
+	}
+
+	got := calculateMemUsage(*s)
+
+	assert.Equal(t, float64(100000), got)
+
 }
