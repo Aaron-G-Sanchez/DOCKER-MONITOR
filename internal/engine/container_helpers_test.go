@@ -34,16 +34,31 @@ func TestFormat(t *testing.T) {
 	}
 }
 
-func TestMemUsage(t *testing.T) {
+func TestCalculateMemUsage(t *testing.T) {
 	s := &container.MemoryStats{
-		Usage: 100600,
+		Usage: 200,
 		Stats: map[string]uint64{
-			"inactive_file": 600,
+			"inactive_file": 100,
 		},
 	}
 
 	got := calculateMemUsage(*s)
 
-	assert.Equal(t, float64(100000), got)
+	assert.Equal(t, float64(100), got)
+}
 
+func TestCalculateMemUsagePerc(t *testing.T) {
+	s := &container.MemoryStats{
+		Usage: 100,
+		Stats: map[string]uint64{
+			"inactive_file": 20,
+		},
+		Limit: 1280,
+	}
+
+	uMem := calculateMemUsage(*s)
+
+	got := calculateMemUsagePerc(uMem, *s)
+
+	assert.Equal(t, float64(6.25), got)
 }
