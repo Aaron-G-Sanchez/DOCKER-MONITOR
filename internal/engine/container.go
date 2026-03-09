@@ -93,11 +93,23 @@ func (c *Container) CollectStats(ctx context.Context, client *docker.Client) {
 			return
 		}
 
-		statEntry := NewStat(*rawStatResult)
-
-		c.mu.Lock()
-		c.stats = statEntry
-		c.mu.Unlock()
-
+		// TODO: Add mem and CPU calculations.
+		// TODO: Replace with SetStats call.
+		// statEntry := NewStat(*rawStatResult)
+		usedMem := calculateMemUsage(rawStatResult.MemoryStats)
+		c.SetStats(&Stat{
+			ID:               rawStatResult.ID,
+			Name:             rawStatResult.Name,
+			OSType:           rawStatResult.OSType,
+			Memory:           bytesToMB(usedMem),
+			MemoryPercentage: calculateMemUsagePerc(usedMem, rawStatResult.MemoryStats),
+		})
 	}
+}
+
+func (c *Container) SetStats(stats *Stat) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.stats = stats
 }

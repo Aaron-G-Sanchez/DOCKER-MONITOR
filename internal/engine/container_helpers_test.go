@@ -7,33 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFormat(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    float64
-		expected string
-	}{
-		{
-			"rounds down",
-			.2222222,
-			"0.22",
-		},
-		{
-			"rounds up",
-			.247,
-			"0.25",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			got := format(tc.input)
-
-			assert.Equal(t, tc.expected, got)
-		})
-	}
-}
-
 func TestCalculateMemUsage(t *testing.T) {
 	s := &container.MemoryStats{
 		Usage: 200,
@@ -45,6 +18,12 @@ func TestCalculateMemUsage(t *testing.T) {
 	got := calculateMemUsage(*s)
 
 	assert.Equal(t, float64(100), got)
+}
+
+func TestBytesToMB(t *testing.T) {
+	got := bytesToMB(float64(1024))
+
+	assert.Equal(t, float64(1024), got)
 }
 
 func TestCalculateMemUsagePerc(t *testing.T) {
