@@ -3,6 +3,7 @@ package engine
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"sync"
@@ -12,24 +13,15 @@ import (
 )
 
 // TODO: Add Windows support.
-// TODO: Create calculation function.
 type Stat struct {
 	ID               string
 	Name             string
 	OSType           string
-	CPUPercentage    float64 // Calc %
-	Memory           float64 // Calc
-	MemoryPercentage float64 // Calc %
-	NetworkRx        float64 // Calc network io
-	NetworkTx        float64 // Calc network io
-}
-
-// TODO: Calculate network traffic, and mem/cpu usage.
-func NewStat(entry container.StatsResponse) *Stat {
-	return &Stat{
-		ID:   entry.ID,
-		Name: entry.Name,
-	}
+	CPUPercentage    float64
+	Memory           float64
+	MemoryPercentage float64
+	NetworkRx        float64
+	NetworkTx        float64
 }
 
 type Container struct {
@@ -93,11 +85,25 @@ func (c *Container) CollectStats(ctx context.Context, client *docker.Client) {
 			return
 		}
 
-		statEntry := NewStat(*rawStatResult)
-
-		c.mu.Lock()
-		c.stats = statEntry
-		c.mu.Unlock()
-
+		usedMem := CalculateMemUsage(rawStatResult.MemoryStats)
+		netRx, netTx := CalculateNetworkIO(rawStatResult.Networks)
+		c.SetStats(&Stat{
+			ID:               rawStatResult.ID,
+			Name:             rawStatResult.Name,
+			OSType:           rawStatResult.OSType,
+			CPUPercentage:    CalculateCPUPerc(rawStatResult),
+			Memory:           bytesToMB(usedMem),
+			MemoryPercentage: CalculateMemUsagePerc(usedMem, rawStatResult.MemoryStats),
+			NetworkRx:        netRx,
+			NetworkTx:        netTx,
+		})
 	}
+}
+
+func (c *Container) SetStats(stats *Stat) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	fmt.Printf("STATS: %+v\n", stats)
+	c.stats = stats
 }
