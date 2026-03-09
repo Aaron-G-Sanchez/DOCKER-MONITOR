@@ -3,6 +3,7 @@ package engine
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"sync"
@@ -96,13 +97,14 @@ func (c *Container) CollectStats(ctx context.Context, client *docker.Client) {
 		// TODO: Add mem and CPU calculations.
 		// TODO: Replace with SetStats call.
 		// statEntry := NewStat(*rawStatResult)
-		usedMem := calculateMemUsage(rawStatResult.MemoryStats)
+		usedMem := CalculateMemUsage(rawStatResult.MemoryStats)
 		c.SetStats(&Stat{
 			ID:               rawStatResult.ID,
 			Name:             rawStatResult.Name,
 			OSType:           rawStatResult.OSType,
+			CPUPercentage:    CalculateCPUPerc(rawStatResult),
 			Memory:           bytesToMB(usedMem),
-			MemoryPercentage: calculateMemUsagePerc(usedMem, rawStatResult.MemoryStats),
+			MemoryPercentage: CalculateMemUsagePerc(usedMem, rawStatResult.MemoryStats),
 		})
 	}
 }
@@ -111,5 +113,6 @@ func (c *Container) SetStats(stats *Stat) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	fmt.Printf("STATS: %+v\n", stats)
 	c.stats = stats
 }

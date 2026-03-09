@@ -15,7 +15,7 @@ func TestCalculateMemUsage(t *testing.T) {
 		},
 	}
 
-	got := calculateMemUsage(*s)
+	got := CalculateMemUsage(*s)
 
 	assert.Equal(t, float64(100), got)
 }
@@ -35,9 +35,31 @@ func TestCalculateMemUsagePerc(t *testing.T) {
 		Limit: 1280,
 	}
 
-	uMem := calculateMemUsage(*s)
+	uMem := CalculateMemUsage(*s)
 
-	got := calculateMemUsagePerc(uMem, *s)
+	got := CalculateMemUsagePerc(uMem, *s)
 
 	assert.Equal(t, float64(6.25), got)
+}
+
+func TestCalculateCPUPerc(t *testing.T) {
+	s := &container.StatsResponse{
+		CPUStats: container.CPUStats{
+			CPUUsage: container.CPUUsage{
+				TotalUsage: 200,
+			},
+			SystemUsage: 2000,
+			OnlineCPUs:  4,
+		},
+		PreCPUStats: container.CPUStats{
+			CPUUsage: container.CPUUsage{
+				TotalUsage: 100,
+			},
+			SystemUsage: 1000,
+		},
+	}
+
+	got := CalculateCPUPerc(s)
+
+	assert.Equal(t, float64(40), got)
 }
