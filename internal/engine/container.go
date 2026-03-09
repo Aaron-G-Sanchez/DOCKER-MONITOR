@@ -13,24 +13,15 @@ import (
 )
 
 // TODO: Add Windows support.
-// TODO: Create calculation function.
 type Stat struct {
 	ID               string
 	Name             string
 	OSType           string
-	CPUPercentage    float64 // Calc %
-	Memory           float64 // Calc
-	MemoryPercentage float64 // Calc %
-	NetworkRx        float64 // Calc network io
-	NetworkTx        float64 // Calc network io
-}
-
-// TODO: Calculate network traffic, and mem/cpu usage.
-func NewStat(entry container.StatsResponse) *Stat {
-	return &Stat{
-		ID:   entry.ID,
-		Name: entry.Name,
-	}
+	CPUPercentage    float64
+	Memory           float64
+	MemoryPercentage float64
+	NetworkRx        float64
+	NetworkTx        float64
 }
 
 type Container struct {
@@ -94,10 +85,8 @@ func (c *Container) CollectStats(ctx context.Context, client *docker.Client) {
 			return
 		}
 
-		// TODO: Add mem and CPU calculations.
-		// TODO: Replace with SetStats call.
-		// statEntry := NewStat(*rawStatResult)
 		usedMem := CalculateMemUsage(rawStatResult.MemoryStats)
+		netRx, netTx := CalculateNetworkIO(rawStatResult.Networks)
 		c.SetStats(&Stat{
 			ID:               rawStatResult.ID,
 			Name:             rawStatResult.Name,
@@ -105,6 +94,8 @@ func (c *Container) CollectStats(ctx context.Context, client *docker.Client) {
 			CPUPercentage:    CalculateCPUPerc(rawStatResult),
 			Memory:           bytesToMB(usedMem),
 			MemoryPercentage: CalculateMemUsagePerc(usedMem, rawStatResult.MemoryStats),
+			NetworkRx:        netRx,
+			NetworkTx:        netTx,
 		})
 	}
 }

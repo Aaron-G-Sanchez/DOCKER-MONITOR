@@ -24,3 +24,14 @@ func CalculateCPUPerc(stats *container.StatsResponse) float64 {
 
 	return (cpuDelta / systemCPUDelta) * float64(cpuCount) * 100
 }
+
+func CalculateNetworkIO(networkStats map[string]container.NetworkStats) (float64, float64) {
+	var rx, tx float64
+
+	for _, network := range networkStats {
+		rx += float64(network.RxBytes)
+		tx += float64(network.TxBytes)
+	}
+
+	return rx, tx
+}

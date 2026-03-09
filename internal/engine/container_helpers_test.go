@@ -21,9 +21,9 @@ func TestCalculateMemUsage(t *testing.T) {
 }
 
 func TestBytesToMB(t *testing.T) {
-	got := bytesToMB(float64(1024))
+	got := bytesToMB(1024 * 1024)
 
-	assert.Equal(t, float64(1024), got)
+	assert.Equal(t, float64(1), got)
 }
 
 func TestCalculateMemUsagePerc(t *testing.T) {
@@ -62,4 +62,21 @@ func TestCalculateCPUPerc(t *testing.T) {
 	got := CalculateCPUPerc(s)
 
 	assert.Equal(t, float64(40), got)
+}
+
+func TestCalculateNetworkIO(t *testing.T) {
+
+	s := &container.StatsResponse{
+		Networks: map[string]container.NetworkStats{
+			"eth0": {
+				RxBytes: 1172,
+				TxBytes: 126,
+			},
+		},
+	}
+
+	gotRx, gotTx := CalculateNetworkIO(s.Networks)
+	assert.Equal(t, float64(1172), gotRx)
+	assert.Equal(t, float64(126), gotTx)
+
 }
