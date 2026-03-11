@@ -40,7 +40,6 @@ func (s *Server) CreateRoutes() {
 		render(ctx, http.StatusOK, templates.Home())
 	})
 
-	s.router.GET("/demo", s.handleDemo())
 	s.router.GET("/containers", s.handleContainerData())
 }
 
@@ -87,7 +86,6 @@ func (s *Server) handleContainerData() gin.HandlerFunc {
 					fmt.Println("Error marshalling container data", err)
 				}
 
-				// TODO: Get container data and pass to the data field.
 				if _, err := fmt.Fprintf(ctx.Writer, "data: %s\n\n", json); err != nil {
 					return
 				}
@@ -99,18 +97,5 @@ func (s *Server) handleContainerData() gin.HandlerFunc {
 			}
 		}
 
-	}
-}
-
-// TODO: Move and replace handler function.
-func (s *Server) handleDemo() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		s.monitorEngine.Mu.RLock()
-		containers := s.monitorEngine.Containers
-		s.monitorEngine.Mu.RUnlock()
-
-		ctx.JSON(http.StatusOK, gin.H{
-			"containers": containers,
-		})
 	}
 }
