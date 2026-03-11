@@ -117,6 +117,7 @@ func (c *Container) ToDTO() ContainerDTO {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	// TODO: Create function to parse out single name and remove backslash.
 	return ContainerDTO{
 		ID:    c.id,
 		Names: c.names,

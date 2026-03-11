@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "esbuild ./*.ts --bundle --outdir=../static/js --watch",
     "build": "esbuild --bundle --minify --outdir=../static/js ./*.ts",
+    "build:css": "sass ./styles/main.scss ../static/css/main.css",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {

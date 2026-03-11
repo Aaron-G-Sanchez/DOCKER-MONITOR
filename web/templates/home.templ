@@ -1,16 +1,25 @@
 package templates
 
-templ Home() {
+import "github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/engine"
+import "github.com/aaron-g-sanchez/DOCKER-MONITOR/web/templates/components"
+
+templ Home(containers []engine.ContainerDTO) {
   <!DOCTYPE html>
   <html lang="en">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DOCKER MONITOR</title>
+    <link href='/static/css/main.css' rel='stylesheet'/>
     <script src="/static/js/index.js" defer></script>
   </head>
   <body>
-    <h1>DASHBOARD</h1>
+    <h1 class='title'>DASHBOARD</h1>
+    <main>
+      for _, container := range containers {
+        @components.ContainerCard(container)
+      }
+    </main>
   </body>
   </html>
 }

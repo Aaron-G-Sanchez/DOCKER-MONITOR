@@ -37,7 +37,8 @@ func (s *Server) CreateRoutes() {
 	})
 
 	s.router.GET("/", func(ctx *gin.Context) {
-		render(ctx, http.StatusOK, templates.Home())
+		containers := s.monitorEngine.ContainerSnapshot()
+		render(ctx, http.StatusOK, templates.Home(containers))
 	})
 
 	s.router.GET("/containers", s.handleContainerData())

@@ -6,7 +6,7 @@ tmp_dir = "tmp"
 
 [build]
   bin = "./tmp/main"
-  cmd = "cd ./web/src && npm run build && cd ../.. && templ generate && go build -o ./tmp/main ./cmd/server"
+  cmd = "cd ./web/src && npm run build:css && npm run build && cd ../.. && templ generate && go build -o ./tmp/main ./cmd/server"
   delay = 0
   entrypoint = ["./tmp/main"]
   exclude_dir = [
@@ -33,6 +33,7 @@ tmp_dir = "tmp"
     "templ",
     "html",
     "ts",
+    "scss",
   ]
   
 [color]

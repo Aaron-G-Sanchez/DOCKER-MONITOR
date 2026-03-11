@@ -1,0 +1,12 @@
+package components
+
+import (
+  "github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/engine"
+  "fmt"
+)
+
+templ ContainerCard(container engine.ContainerDTO) {
+  <div class={fmt.Sprintf("card %s", container.State)} data-id={container.ID}>
+    <p>{container.Names[0]}</p>
+  </div>
+}
