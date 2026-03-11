@@ -1,4 +1,4 @@
-import { Container } from './interfaces/container'
+import { Container } from './interfaces'
 
 const eSource = new EventSource('http://localhost:6060/containers')
 
