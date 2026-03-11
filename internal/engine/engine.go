@@ -12,17 +12,17 @@ import (
 	"github.com/moby/moby/client"
 )
 
+type MonitorEngine struct {
+	Mu         sync.RWMutex
+	Client     docker.Client
+	Containers map[string]*Container
+}
+
 func NewEngine(client docker.Client) *MonitorEngine {
 	return &MonitorEngine{
 		Client:     client,
 		Containers: make(map[string]*Container),
 	}
-}
-
-type MonitorEngine struct {
-	Mu         sync.RWMutex
-	Client     docker.Client
-	Containers map[string]*Container
 }
 
 // Launches event subscription and container monitoring process.
@@ -39,6 +39,20 @@ func (eng *MonitorEngine) Start(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// Captures a snapshot of the current Containers state.
+func (eng *MonitorEngine) ContainerSnapshot() []ContainerDTO {
+	eng.Mu.RLock()
+	containers := eng.Containers
+	eng.Mu.RUnlock()
+
+	snap := make([]ContainerDTO, 0, len(containers))
+	for _, c := range containers {
+		snap = append(snap, c.ToDTO())
+	}
+
+	return snap
 }
 
 // Loads containers from Docker host and starts collecting stats for
@@ -90,7 +104,6 @@ func (eng *MonitorEngine) handleEvents(
 	ctx context.Context,
 	eventChan <-chan events.Message,
 ) {
-	// TODO: Add event handling for die events. <---- [STOPPED HERE]
 	for e := range eventChan {
 		if e.Actor.ID == "" {
 			continue

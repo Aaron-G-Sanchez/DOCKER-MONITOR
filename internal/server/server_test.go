@@ -17,23 +17,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var mockContainers = &client.ContainerListResult{
+	Items: []container.Summary{
+		{
+			ID:    "mock-container",
+			Names: []string{"mock-container"},
+			Image: "mock-image:latest",
+		},
+		{
+			ID:    "mock-container-two",
+			Names: []string{"mock-container-two"},
+			Image: "mock-image",
+		},
+	},
+}
+
 func TestServer(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-
-	mockContainers := &client.ContainerListResult{
-		Items: []container.Summary{
-			{
-				ID:    "mock-container",
-				Names: []string{"mock-container"},
-				Image: "mock-image:latest",
-			},
-			{
-				ID:    "mock-container-two",
-				Names: []string{"mock-container-two"},
-				Image: "mock-image",
-			},
-		},
-	}
 
 	mockServer := setup(mockContainers, t)
 
@@ -49,7 +49,7 @@ func TestServer(t *testing.T) {
 func TestHomeRoute(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	mockServer := NewServer(nil)
+	mockServer := setup(mockContainers, t)
 
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/", nil)
