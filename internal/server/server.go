@@ -2,7 +2,9 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/engine"
 	"github.com/aaron-g-sanchez/DOCKER-MONITOR/web/templates"
@@ -38,19 +40,7 @@ func (s *Server) CreateRoutes() {
 	})
 
 	s.router.GET("/demo", s.handleDemo())
-}
-
-// TODO: Move and replace handler function.
-func (s *Server) handleDemo() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		s.monitorEngine.Mu.RLock()
-		containers := s.monitorEngine.Containers
-		s.monitorEngine.Mu.RUnlock()
-
-		ctx.JSON(http.StatusOK, gin.H{
-			"containers": containers,
-		})
-	}
+	s.router.GET("/containers", s.handleContainerData())
 }
 
 // Create http.Server instance and launch the server.
@@ -66,4 +56,55 @@ func (s *Server) Start(addr string) error {
 // Shutdown the server.
 func (s *Server) Shutdown(ctx context.Context) error {
 	return s.http.Shutdown(ctx)
+}
+
+func (s *Server) handleContainerData() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		ctx.Writer.Header().Set("Content-Type", "text/event-stream")
+		ctx.Writer.Header().Set("Cache-Control", "no-cache")
+		ctx.Writer.Header().Set("Connection", "keep-alive")
+		ctx.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+
+		fmt.Println("New Client")
+
+		clientGone := ctx.Request.Context().Done()
+
+		rc := http.NewResponseController(ctx.Writer)
+		t := time.NewTicker(time.Second)
+		defer t.Stop()
+
+		for {
+			select {
+			case <-clientGone:
+				fmt.Println("Client disconnected")
+				return
+			case <-t.C:
+
+				// TODO: Get container data and pass to the data field.
+				_, err := fmt.Fprintf(ctx.Writer, "data: Current time %s\n\n", time.Now().Format(time.UnixDate))
+				if err != nil {
+					return
+				}
+				err = rc.Flush()
+				if err != nil {
+					fmt.Println("Error writing to response writer: ", err)
+					return
+				}
+			}
+		}
+
+	}
+}
+
+// TODO: Move and replace handler function.
+func (s *Server) handleDemo() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		s.monitorEngine.Mu.RLock()
+		containers := s.monitorEngine.Containers
+		s.monitorEngine.Mu.RUnlock()
+
+		ctx.JSON(http.StatusOK, gin.H{
+			"containers": containers,
+		})
+	}
 }
