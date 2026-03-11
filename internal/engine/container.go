@@ -3,7 +3,6 @@ package engine
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"sync"
@@ -14,14 +13,21 @@ import (
 
 // TODO: Add Windows support.
 type Stat struct {
-	ID               string
-	Name             string
-	OSType           string
-	CPUPercentage    float64
-	Memory           float64
-	MemoryPercentage float64
-	NetworkRx        float64
-	NetworkTx        float64
+	ID               string  `json:"id"`
+	Name             string  `json:"name"`
+	OSType           string  `json:"os_type"`
+	CPUPercentage    float64 `json:"cpu_percentage"`
+	Memory           float64 `json:"memory"`
+	MemoryPercentage float64 `json:"memory_percentage"`
+	NetworkRx        float64 `json:"network_rx"`
+	NetworkTx        float64 `json:"network_tx"`
+}
+
+type ContainerDTO struct {
+	ID    string                   `json:"id"`
+	Names []string                 `json:"names"`
+	State container.ContainerState `json:"state"`
+	Stats *Stat                    `json:"stats,omitempty"`
 }
 
 type Container struct {
@@ -104,6 +110,17 @@ func (c *Container) SetStats(stats *Stat) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	fmt.Printf("STATS: %+v\n", stats)
 	c.stats = stats
+}
+
+func (c *Container) ToDTO() ContainerDTO {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	return ContainerDTO{
+		ID:    c.id,
+		Names: c.names,
+		State: c.state,
+		Stats: c.stats,
+	}
 }

@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -79,10 +80,15 @@ func (s *Server) handleContainerData() gin.HandlerFunc {
 				fmt.Println("Client disconnected")
 				return
 			case <-t.C:
+				containers := s.monitorEngine.ContainerSnapshot()
+
+				json, err := json.Marshal(containers)
+				if err != nil {
+					fmt.Println("Error marshalling container data", err)
+				}
 
 				// TODO: Get container data and pass to the data field.
-				_, err := fmt.Fprintf(ctx.Writer, "data: Current time %s\n\n", time.Now().Format(time.UnixDate))
-				if err != nil {
+				if _, err := fmt.Fprintf(ctx.Writer, "data: %s\n\n", json); err != nil {
 					return
 				}
 				err = rc.Flush()

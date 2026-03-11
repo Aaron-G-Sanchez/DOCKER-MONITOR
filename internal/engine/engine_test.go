@@ -57,6 +57,33 @@ func TestEngine_StartSuccess(t *testing.T) {
 	)
 }
 
+func TestContainerSnapshot(t *testing.T) {
+	mockContainer := &Container{
+		id:    "abc",
+		names: []string{"mock-container"},
+		state: container.StateExited,
+	}
+
+	expected := []ContainerDTO{{
+		ID:    mockContainer.id,
+		Names: mockContainer.names,
+		State: mockContainer.state,
+	},
+	}
+
+	mockAPI := &testutils.MockDockerClient{}
+	mockClient := docker.NewClientWithMockAPI(mockAPI)
+
+	eng := NewEngine(*mockClient)
+
+	eng.Containers["abc"] = mockContainer
+
+	got := eng.ContainerSnapshot()
+
+	assert.Equal(t, got, expected)
+
+}
+
 func TestGetOrCreateContainer_ExistingContainer(t *testing.T) {
 	mockApi := &testutils.MockDockerClient{}
 	mockClient := docker.NewClientWithMockAPI(mockApi)
