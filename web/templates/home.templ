@@ -1,7 +1,6 @@
 package templates
 
 import "github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/engine"
-import "github.com/aaron-g-sanchez/DOCKER-MONITOR/web/templates/components"
 
 templ Home(containers []engine.ContainerDTO) {
   <!DOCTYPE html>
@@ -14,11 +13,17 @@ templ Home(containers []engine.ContainerDTO) {
     <script src="/static/js/index.js" defer></script>
   </head>
   <body>
-    <h1 class='title'>DASHBOARD</h1>
-    <main>
-      for _, container := range containers {
-        @components.ContainerCard(container)
-      }
+    <header class='header'>
+      <h1 class='title'>DASHBOARD</h1>
+    </header>
+    <main id='dash'>
+      <div class='fleet-overview'>fleet overview</div>
+      <div class='cpu-overview'>cpu overview</div>
+      <div class='mem-overview'>mem overview</div>
+      <div class='disk-overview'>disk overview</div>
+      <div class='running-containers'>running containers</div>
+      <div class='recent-activities'>recent activities</div>
+      
     </main>
   </body>
   </html>

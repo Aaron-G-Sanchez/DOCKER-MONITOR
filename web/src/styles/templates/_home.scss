@@ -23,7 +23,34 @@ main {
   width: 90%;
   padding: 0 5%;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr 1fr;
+  grid-template-areas: 
+  "a b c"
+  "a b d"
+  "e e f "
+  "e e f";
   gap: 5%;
+}
+
+.fleet-overview {
+  grid-area: a;
+}
+
+.cpu-overview {
+  grid-area: b
+}
+
+.mem-overview {
+  grid-area: c;
+}
+
+.disk-overview {
+  grid-area: d;
+}
+
+.running-containers {
+  grid-area: e;
+}
+
+.recent-activities {
+  grid-area: f;
 }
