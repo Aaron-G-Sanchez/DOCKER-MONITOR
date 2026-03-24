@@ -9,7 +9,6 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import "github.com/aaron-g-sanchez/DOCKER-MONITOR/internal/engine"
-import "github.com/aaron-g-sanchez/DOCKER-MONITOR/web/templates/components"
 
 func Home(containers []engine.ContainerDTO) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -32,17 +31,7 @@ func Home(containers []engine.ContainerDTO) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>DOCKER MONITOR</title><link href=\"/static/css/main.css\" rel=\"stylesheet\"><script src=\"/static/js/index.js\" defer></script></head><body><h1 class=\"title\">DASHBOARD</h1><main>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		for _, container := range containers {
-			templ_7745c5c3_Err = components.ContainerCard(container).Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</main></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>DOCKER MONITOR</title><link href=\"/static/css/main.css\" rel=\"stylesheet\"><script src=\"/static/js/index.js\" defer></script><link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"><link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin><link href=\"https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap\" rel=\"stylesheet\"></head><body><header class=\"header\"><h1 class=\"title\">DOCKER MONITOR</h1></header><main class=\"dashboard-container\"><div class=\"fleet-overview\">fleet overview</div><div class=\"cpu-overview\">cpu overview</div><div class=\"mem-overview\">mem overview</div><div class=\"disk-overview\">disk overview</div><div class=\"running-containers\">running containers</div><div class=\"recent-activities\">recent activities</div></main></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
