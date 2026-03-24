@@ -57,7 +57,7 @@ func TestHomeRoute(t *testing.T) {
 	mockServer.router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "DASHBOARD")
+	assert.Contains(t, w.Body.String(), "DOCKER MONITOR")
 }
 
 func setup(containers *client.ContainerListResult, t *testing.T) *Server {
